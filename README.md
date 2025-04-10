@@ -2,6 +2,8 @@
 
 A simple web application that connects to the Strava API to display your activity metrics for April 2025.
 
+![Strava Activity Metrics App](static/sample.png)
+
 ## Features
 
 - OAuth authentication with Strava
