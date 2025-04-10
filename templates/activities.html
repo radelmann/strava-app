@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strava Activities - April 2025</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .totals-row {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        .app-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .na-value {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .info-message {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .debug-section {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .debug-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        .debug-toggle {
+            cursor: pointer;
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+        .debug-content {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .debug-json {
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 0.8rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .activity-link {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .activity-link:hover {
+            text-decoration: underline;
+        }
+        .modal-dialog {
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <img src="{{ url_for('static', filename='icon.svg') }}" alt="App Icon" class="app-icon">
+            <h1>Strava Activities - April 2025</h1>
+        </div>
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Activity</th>
+                        <th>Distance (mi)</th>
+                        <th>Calories</th>
+                        <th>Elevation Gain (ft)</th>
+                        <th>Time (hh:mm)</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in activities %}
+                    <tr>
+                        <td>{{ activity.date }}</td>
+                        <td>{{ activity.name }}</td>
+                        <td>{{ activity.distance }}</td>
+                        <td>{% if activity.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ activity.calories }}{% endif %}</td>
+                        <td>{{ activity.elevation_gain }}</td>
+                        <td>{{ activity.moving_time }}</td>
+                        <td><a href="#" class="activity-link" data-bs-toggle="modal" data-bs-target="#activityModal" data-activity-id="{{ activity.id }}">View</a></td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="totals-row">
+                        <td colspan="2">Totals</td>
+                        <td>{{ totals.distance }}</td>
+                        <td>{% if totals.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ totals.calories }}{% endif %}</td>
+                        <td>{{ totals.elevation_gain }}</td>
+                        <td>{{ totals.moving_time }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {% if totals.calories == "N/A" %}
+            <div class="info-message">
+                <strong>Note:</strong> Calorie data is not available for these activities. This could be because:
+                <ul>
+                    <li>The activities were recorded without a heart rate monitor</li>
+                    <li>The activities were manually added to Strava</li>
+                    <li>Your privacy settings restrict calorie data sharing</li>
+                </ul>
+                <p>Please check your Strava privacy settings and make sure your activities are set to share calorie data.</p>
+            </div>
+            {% endif %}
+
+            <div class="debug-section">
+                <h3>Troubleshooting Calorie Data</h3>
+                <p>If you're not seeing calorie data, please check the following:</p>
+                <ol>
+                    <li><strong>Strava Privacy Settings:</strong> Go to Settings > Privacy Controls and ensure "Activity Data" is set to "Everyone" or "Followers"</li>
+                    <li><strong>Activity Privacy:</strong> For each activity, check that the privacy setting is not set to "Only You"</li>
+                    <li><strong>Heart Rate Monitor:</strong> Calorie data is typically only available when activities are recorded with a heart rate monitor</li>
+                    <li><strong>Reauthorize the App:</strong> <a href="{{ url_for('index') }}" class="debug-toggle">Click here to reauthorize with additional permissions</a></li>
+                </ol>
+
+                <div class="mt-3">
+                    <button id="toggleDebug" class="btn btn-sm btn-outline-secondary">Show API Response Debug</button>
+                    <div id="debugContent" class="debug-content mt-2">
+                        <p><strong>Note:</strong> The Strava API may not return calorie data for activities that were:</p>
+                        <ul>
+                            <li>Recorded without a heart rate monitor</li>
+                            <li>Manually added to Strava</li>
+                            <li>Synced from a device that doesn't track calories</li>
+                        </ul>
+                        <p>If you're using a device that should track calories (like a Garmin, Apple Watch, etc.), make sure it's properly syncing with Strava.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Details Modal -->
+    <div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="activityModalLabel">Activity Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="activityDetails" class="debug-json">Loading...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const debugToggle = document.querySelector('.debug-toggle');
+            if (debugToggle) {
+                debugToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = this.getAttribute('href');
+                });
+            }
+
+            const toggleDebugBtn = document.getElementById('toggleDebug');
+            const debugContent = document.getElementById('debugContent');
+
+            if (toggleDebugBtn && debugContent) {
+                toggleDebugBtn.addEventListener('click', function() {
+                    if (debugContent.style.display === 'block') {
+                        debugContent.style.display = 'none';
+                        this.textContent = 'Show API Response Debug';
+                    } else {
+                        debugContent.style.display = 'block';
+                        this.textContent = 'Hide API Response Debug';
+                    }
+                });
+            }
+
+            // Activity details modal
+            const activityModal = document.getElementById('activityModal');
+            if (activityModal) {
+                activityModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const activityId = button.getAttribute('data-activity-id');
+                    const modalTitle = this.querySelector('.modal-title');
+                    const activityDetails = document.getElementById('activityDetails');
+
+                    modalTitle.textContent = 'Activity Details (ID: ' + activityId + ')';
+                    activityDetails.textContent = 'Loading...';
+
+                    fetch(`/activity/${activityId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            activityDetails.textContent = JSON.stringify(data, null, 2);
+                        })
+                        .catch(error => {
+                            activityDetails.textContent = 'Error loading activity details: ' + error.message;
+                        });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
