@@ -13,7 +13,7 @@ app.secret_key = os.urandom(24)
 # Strava API credentials
 CLIENT_ID = os.getenv('STRAVA_CLIENT_ID')
 CLIENT_SECRET = os.getenv('STRAVA_CLIENT_SECRET')
-REDIRECT_URI = 'http://localhost:5000/callback'
+REDIRECT_URI = 'http://127.0.0.1:5000/callback'
 
 # Strava API endpoints
 AUTH_URL = 'https://www.strava.com/oauth/authorize'

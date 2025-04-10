@@ -22,6 +22,6 @@ A web application that displays Strava activity metrics for a specific month.
 
 ## Usage
 
-1. Visit http://localhost:5000 in your browser
+1. Visit http://127.0.0.1:5000 in your browser
 2. Click "Connect with Strava" to authorize the application
 3. View your activity metrics for April 2025
