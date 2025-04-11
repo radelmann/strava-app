@@ -55,7 +55,7 @@ The application also calculates and displays monthly totals for:
    ```
    python app.py
    ```
-6. Open your browser and navigate to http://localhost:5000
+6. Open your browser and navigate to http://127.0.0.1:5000
 
 ## Requirements
 
