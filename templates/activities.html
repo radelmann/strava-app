@@ -118,8 +118,8 @@
                     <tr>
                         <td>{{ activity.date }}</td>
                         <td>{{ activity.name }}</td>
-                        <td>{{ activity.distance }}</td>
-                        <td>{% if activity.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ activity.calories }}{% endif %}</td>
+                        <td>{{ "%.1f"|format(activity.distance) }}</td>
+                        <td>{% if activity.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ "%.0f"|format(activity.calories) }}{% endif %}</td>
                         <td>{{ activity.elevation_gain }}</td>
                         <td>{{ activity.moving_time }}</td>
                         <td><a href="#" class="activity-link" data-bs-toggle="modal" data-bs-target="#activityModal" data-activity-id="{{ activity.id }}">View</a></td>
@@ -127,8 +127,8 @@
                     {% endfor %}
                     <tr class="totals-row">
                         <td colspan="2">Totals</td>
-                        <td>{{ totals.distance }}</td>
-                        <td>{% if totals.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ totals.calories }}{% endif %}</td>
+                        <td>{{ "%.1f"|format(totals.distance) }} miles</td>
+                        <td>{% if totals.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ "%.0f"|format(totals.calories) }}{% endif %}</td>
                         <td>{{ totals.elevation_gain }}</td>
                         <td>{{ totals.moving_time }}</td>
                         <td></td>
