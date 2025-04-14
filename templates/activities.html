@@ -111,6 +111,7 @@
                         <th>Elevation Gain (ft)</th>
                         <th>Time (hh:mm)</th>
                         <th>Details</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,6 +124,18 @@
                         <td>{{ activity.elevation_gain }}</td>
                         <td>{{ activity.moving_time }}</td>
                         <td><a href="#" class="activity-link" data-bs-toggle="modal" data-bs-target="#activityModal" data-activity-id="{{ activity.id }}">View</a></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary add-activity-btn"
+                                    data-activity-id="{{ activity.id }}"
+                                    data-activity-name="{{ activity.name }}"
+                                    data-activity-date="{{ activity.date }}"
+                                    data-activity-distance="{{ activity.distance }}"
+                                    data-activity-calories="{{ activity.calories }}"
+                                    data-activity-elevation="{{ activity.elevation_gain }}"
+                                    data-activity-time="{{ activity.moving_time }}">
+                                Add Activity
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                     <tr class="totals-row">
@@ -131,6 +144,7 @@
                         <td>{% if totals.calories == "N/A" %}<span class="na-value">N/A</span>{% else %}{{ "%.0f"|format(totals.calories) }}{% endif %}</td>
                         <td>{{ totals.elevation_gain }}</td>
                         <td>{{ totals.moving_time }}</td>
+                        <td></td>
                         <td></td>
                     </tr>
                 </tbody>
@@ -240,7 +254,112 @@
                         });
                 });
             }
+
+            // Handle Add Activity button clicks
+            const addActivityButtons = document.querySelectorAll('.add-activity-btn');
+            addActivityButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const activityId = this.getAttribute('data-activity-id');
+                    const activityData = {
+                        id: activityId,
+                        name: this.getAttribute('data-activity-name'),
+                        date: this.getAttribute('data-activity-date'),
+                        distance: this.getAttribute('data-activity-distance'),
+                        calories: this.getAttribute('data-activity-calories'),
+                        elevation: this.getAttribute('data-activity-elevation'),
+                        time: this.getAttribute('data-activity-time')
+                    };
+
+                    // Disable the button and show loading state
+                    this.disabled = true;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+
+                    // Make POST request to graph.yt
+                    fetch('/proxy/add_activity', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            'type': activityData.name,
+                            'date': activityData.date,
+                            'distance': activityData.distance,
+                            'distance_unit': 'miles',
+                            'calories': activityData.calories === 'N/A' ? '0' : activityData.calories
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Show success message
+                            this.innerHTML = '<i class="bi bi-check-circle"></i> Added';
+                            this.classList.remove('btn-primary');
+                            this.classList.add('btn-success');
+                            this.disabled = true;
+
+                            // Show success toast
+                            const toast = new bootstrap.Toast(document.getElementById('successToast'));
+                            toast.show();
+                        } else {
+                            throw new Error(data.message || 'Failed to add activity');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Show error message
+                        this.innerHTML = '<i class="bi bi-x-circle"></i> Error';
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-danger');
+
+                        // Show error toast with more details
+                        const errorToast = document.getElementById('errorToast');
+                        const toastBody = errorToast.querySelector('.toast-body');
+                        toastBody.textContent = `Failed to add activity: ${error.message}`;
+                        const toast = new bootstrap.Toast(errorToast);
+                        toast.show();
+
+                        // Re-enable the button after a delay
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="bi bi-plus-circle"></i> Add';
+                            this.classList.remove('btn-danger');
+                            this.classList.add('btn-primary');
+                            this.disabled = false;
+                        }, 3000);
+                    });
+                });
+            });
         });
     </script>
+
+    <!-- Success Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Activity successfully added to graph.yt!
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Failed to add activity to graph.yt. Please try again.
+            </div>
+        </div>
+    </div>
 </body>
 </html>

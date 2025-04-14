@@ -24,11 +24,62 @@ API_URL = 'https://www.strava.com/api/v3'
 METERS_TO_MILES = 0.000621371
 METERS_TO_FEET = 3.28084
 
+# Activity type mapping for graph.yt
+ACTIVITY_TYPE_MAP = {
+    "Run": "1",
+    "Walk": "2",
+    "Hike": "3",
+    "Bike": "4",
+    "Swim": "5",
+    "Kayak": "6",
+    "Stand Up Paddle": "7",
+    "Row": "8",
+    "Workout": "9",
+    "Yoga": "10",
+    "Other": "11"
+}
+
 def format_time(minutes):
     """Convert minutes to hh:mm format"""
     hours = int(minutes // 60)
     mins = int(minutes % 60)
     return f"{hours:02d}:{mins:02d}"
+
+def get_activity_type(activity_name):
+    """Get the activity type code based on partial matches in the activity name"""
+    # Convert activity name to lowercase for case-insensitive matching
+    activity_name = activity_name.lower()
+    print(f"\n=== Activity Type Matching ===")
+    print(f"Activity name: {activity_name}")
+
+    # Define variations of activity types
+    activity_variations = {
+        "Run": ["run", "running", "jog", "jogging"],
+        "Walk": ["walk", "walking", "stroll"],
+        "Hike": ["hike", "hiking", "trail", "mountain"],
+        "Bike": ["bike", "biking", "cycling", "cycle", "ride"],
+        "Swim": ["swim", "swimming"],
+        "Kayak": ["kayak", "kayaking"],
+        "Stand Up Paddle": ["paddle", "sup", "stand up paddle"],
+        "Row": ["row", "rowing"],
+        "Workout": ["workout", "strength", "weight", "gym", "crossfit"],
+        "Yoga": ["yoga", "stretch", "meditation"],
+        "Other": ["other"]
+    }
+
+    # Check for matches in the activity name
+    for activity_type, variations in activity_variations.items():
+        print(f"\nChecking {activity_type} variations:")
+        for variation in variations:
+            print(f"  - Checking '{variation}' in '{activity_name}'")
+            if variation in activity_name:
+                print(f"  ✓ Match found! Using type code: {ACTIVITY_TYPE_MAP[activity_type]}")
+                return ACTIVITY_TYPE_MAP[activity_type]
+            else:
+                print(f"  ✗ No match")
+
+    print("\nNo matches found, defaulting to 'Other' (11)")
+    return "11"
 
 @app.route('/')
 def index():
@@ -213,6 +264,70 @@ def activities():
     return render_template('activities.html',
                          activities=processed_activities,
                          totals=totals)
+
+@app.route('/proxy/add_activity', methods=['POST'])
+def proxy_add_activity():
+    try:
+        # Get the form data from the request
+        data = request.form
+        print("\n=== Request to graph.yt ===")
+        print("Form data:", dict(data))
+
+        # Get the activity type from the mapping using partial match
+        activity_type = get_activity_type(data['type'])
+        print(f"Activity name: {data['type']}, Mapped type: {activity_type}")
+
+        # Construct the cookie header from environment variables
+        cookie_header = f'challenge={os.getenv("GRAPH_YT_CHALLENGE")}; PHPSESSID={os.getenv("GRAPH_YT_PHPSESSID")}'
+
+        # Forward the request to graph.yt
+        response = requests.post(
+            'https://graph.yt/add_activity.php',
+            headers={
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'accept-language': 'en-US,en;q=0.9',
+                'cache-control': 'no-cache',
+                'content-type': 'application/x-www-form-urlencoded',
+                'cookie': cookie_header,
+                'origin': 'https://graph.yt',
+                'pragma': 'no-cache',
+                'priority': 'u=0, i',
+                'referer': 'https://graph.yt/add_activity.php',
+                'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"macOS"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-user': '?1',
+                'upgrade-insecure-requests': '1',
+                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+            },
+            data={
+                'type': activity_type,
+                'date': data['date'],
+                'distance': data['distance'],
+                'distance_unit': 'miles',
+                'calories': data['calories']
+            }
+        )
+
+        print("\n=== Response from graph.yt ===")
+        print("Status code:", response.status_code)
+        print("Response headers:", dict(response.headers))
+        print("Response content:", response.text[:500])  # Print first 500 chars of response
+
+        # Check if the response is successful and contains the success message
+        if response.status_code == 200 and "Activity successfully added to your activities!" in response.text:
+            # Return a JSON response indicating success
+            return jsonify({'status': 'success', 'message': 'Activity added successfully'})
+        else:
+            # Return a JSON response indicating failure
+            return jsonify({'status': 'error', 'message': 'Failed to add activity. Unexpected response from server.'}), 400
+    except Exception as e:
+        print("\n=== Error in proxy endpoint ===")
+        print("Error:", str(e))
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
