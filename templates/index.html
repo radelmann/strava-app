@@ -4,45 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strava Activity Metrics</title>
+
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f8f9fa;
-        }
-        .container {
-            text-align: center;
-        }
-        .btn-strava {
-            background-color: #fc4c02;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .btn-strava:hover {
-            background-color: #e34402;
-            color: white;
-        }
-        .app-icon {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 20px;
-        }
-    </style>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <img src="{{ url_for('static', filename='icon.svg') }}" alt="App Icon" class="app-icon">
-        <h1 class="mb-4">Strava Activity Metrics</h1>
-        <p class="mb-4">View your Strava activities for April 2025</p>
-        <a href="{{ auth_url }}" class="btn-strava">Connect with Strava</a>
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">Strava Activities</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/">Home</a>
+                    <a class="nav-link" href="https://www.strava.com/settings/privacy" target="_blank">Strava Privacy Settings</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="home-container">
+            <img src="{{ url_for('static', filename='icon.svg') }}" alt="App Icon" class="app-icon">
+            <h1 class="app-title">Strava Activity Metrics</h1>
+            <p class="app-description">
+                View and analyze your Strava activities for April 2025. This application displays your activity metrics including distance, calories, elevation gain, and moving time.
+            </p>
+
+            {% if error %}
+            <div class="error-message">
+                <i class="bi bi-exclamation-triangle"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <a href="{{ auth_url }}" class="btn btn-primary auth-button">
+                <i class="bi bi-strava"></i> Connect with Strava
+            </a>
+
+            <div class="mt-4">
+                <p class="text-muted">
+                    <small>
+                        By connecting with Strava, you agree to share your activity data with this application.
+                        <br>
+                        <a href="https://www.strava.com/settings/privacy" target="_blank">Manage your Strava privacy settings</a>
+                    </small>
+                </p>
+            </div>
+        </main>
     </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
