@@ -18,6 +18,24 @@ A simple web application that connects to the Strava API to display your activit
 - Calculates and displays monthly totals for all metrics
 - Detailed activity view with raw API data for debugging
 - Responsive design that works on mobile and desktop
+- Integration with graph.yt for activity tracking
+
+## Environment Variables
+
+The application requires the following environment variables to be set in a `.env` file:
+
+### Strava API Credentials
+- `STRAVA_CLIENT_ID`: Your Strava API client ID
+- `STRAVA_CLIENT_SECRET`: Your Strava API client secret
+
+### Graph.yt Cookie Values
+- `GRAPH_YT_CHALLENGE`: The challenge cookie value for graph.yt authentication
+- `GRAPH_YT_PHPSESSID`: The PHP session ID cookie value for graph.yt authentication
+
+### Flask Configuration
+- `FLASK_ENV`: Environment setting (development/production)
+- `FLASK_DEBUG`: Debug mode setting (1 for development, 0 for production)
+- `SECRET_KEY`: Flask secret key for session security
 
 ## Metrics Displayed
 
@@ -42,10 +60,20 @@ The application also calculates and displays monthly totals for:
 
 1. Create a Strava API application at https://www.strava.com/settings/api
 2. Clone this repository
-3. Create a `.env` file with your Strava API credentials:
+3. Create a `.env` file with your credentials:
    ```
+   # Strava API Credentials
    STRAVA_CLIENT_ID=your_client_id
    STRAVA_CLIENT_SECRET=your_client_secret
+
+   # Graph.yt Cookie Values
+   GRAPH_YT_CHALLENGE=your_challenge_cookie
+   GRAPH_YT_PHPSESSID=your_phpsessid_cookie
+
+   # Flask Configuration
+   FLASK_ENV=development
+   FLASK_DEBUG=1
+   SECRET_KEY=your_secret_key
    ```
 4. Install dependencies:
    ```
@@ -70,6 +98,7 @@ The application also calculates and displays monthly totals for:
 - Calorie data may not be available for all activities, depending on your device and privacy settings
 - The application displays data in imperial units (miles and feet)
 - Time is displayed in hours and minutes format (HH:MM)
+- The application uses graph.yt for activity tracking, requiring valid cookie values
 
 ## Strava Privacy Settings for Calories
 
