@@ -54,18 +54,27 @@ ACTIVITY_VARIATIONS = {
     "Other": ["other"]
 }
 
-def format_time(minutes):
-    """Convert minutes to HH:MM format.
+def format_time(seconds: int) -> str:
+    """
+    Format time in seconds to HH:MM format.
 
     Args:
-        minutes (float): Total minutes to format
+        seconds (int): Time in seconds
 
     Returns:
-        str: Time formatted as HH:MM
+        str: Formatted time string in HH:MM format
     """
-    hours = int(minutes // 60)
-    mins = int(minutes % 60)
-    return f"{hours:02d}:{mins:02d}"
+    try:
+        # Convert seconds to hours and minutes
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+
+        # Format as HH:MM with leading zeros
+        return f"{hours:02d}:{minutes:02d}"
+
+    except Exception as e:
+        print(f"Error formatting time: {str(e)}")
+        return "00:00"
 
 def get_activity_type(activity_name):
     """Get the activity type code based on partial matches in the activity name.
@@ -349,7 +358,7 @@ def activities():
         'distance': 0,
         'calories': 0,
         'elevation': 0,
-        'time': 0
+        'time': 0  # This will store total seconds
     }
 
     for activity in activities_data:
@@ -366,10 +375,7 @@ def activities():
                 totals['calories'] += processed_activity['calories']
             totals['distance'] += processed_activity['distance']
             totals['elevation'] += processed_activity['elevation']
-
-            # Parse time string back to minutes for total
-            hours, minutes = map(int, processed_activity['time'].split(':'))
-            totals['time'] += hours * 60 + minutes
+            totals['time'] += activity['moving_time']  # Add raw seconds
 
     # Format total time
     totals['time'] = format_time(totals['time'])
